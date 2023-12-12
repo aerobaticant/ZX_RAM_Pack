@@ -1,0 +1,69 @@
+Name     	ZX RAM decode;
+Partno		00;
+Date     	09/02/2022;
+Revision 	01;
+Designer 	Ant Goffart;
+Company  	AmberTronic Limited;
+Assembly 	None;
+Location 	U2;
+Device   	g16V8;
+
+/***************************************************************
+
+32K RAM pack for ZX80 / ZX81
+-------------------------------
+
+RAM is enabled when A13, A14 or A15 are high ($2000-$FFFF)
+RAM area $4000-$7FFF is shadowed at $C000-$FFFF
+
+RAM is read during MREQ or RFSH to allow Hi Res Graphics
+
+ROM shadow is disabled when A15 is high ($8000-$BFFF)
+Note: ZX80 has no ROMCS signal so ROM shadow can't be disabled
+This means the ZX80 can only be given 16K
+
+ROM is also disabled in address $0004 following reset to allow auto detection.
+Pull-ups on the data bus generate LD BC,$FFFF instead of LD BC,$7FFF for RAM-CHECK
+
+***************************************************************/
+
+/* Inputs */
+
+pin 1		= !RFSH ;
+pin 2 		= !RESET ;
+pin 3		= A6 ;
+pin 4		= !WR ;
+pin 5		= !MREQ ;
+pin 6		= A15 ;
+pin 7		= A14 ;
+pin 8		= A2 ;
+pin 9		= A1 ;
+pin 11		= A0 ;
+
+pin 16		= A13 ;
+
+/* Outputs */
+
+pin 15		= !CS ;
+pin 17		= !OE ;
+pin 18		= !WE ;
+pin 19		= !ROMCS ;
+
+pinnode 13	= startup ;
+pinnode 14	= romdis ;
+
+field addr	= [A2..0] ;
+
+/* Equations */
+
+CS		= (MREQ # RFSH) & (A15 # A14 # A13) ;	/* RAM selected from $2000 to $FFFF */
+OE		= (MREQ # RFSH) & (A15 # A14 # A13) ;	/* RAM output for MREQ or RFSH */
+WE		= WR ;						/* pass-through the write enable */
+
+startup	= RESET # (startup & !A6) ;			/* startup is set by RESET and cleared by A6 */
+
+/* disable ZX81 ROM when A13, A14 or A15 is high, or in startup with addr = 4 */
+romdis		= (A15 # A14 # A13) # (startup & addr:4 & !A6) ;
+
+ROMCS		= 'b'0 ;					/* inverted signal is driven high to disable ROM */
+ROMCS.oe	= romdis;					/* uses open-collector drive */
