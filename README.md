@@ -2,6 +2,8 @@
 This is my design for a RAM pack for the Sinclair ZX81 computer.
 <br>It uses a 62256 SRAM IC to give 32KiB of RAM available to BASIC.
 
+<picture><img src="/KiCad/ZX RAM Pack V2.png"></picture>
+
 ## PLD
 A 16V8 PLD is used to do the address decoding.
 
